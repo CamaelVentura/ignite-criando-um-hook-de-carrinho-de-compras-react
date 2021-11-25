@@ -22,6 +22,7 @@ interface CartContextData {
 const CartContext = createContext<CartContextData>({} as CartContextData);
 
 export function CartProvider({ children }: CartProviderProps): JSX.Element {
+
   const [cart, setCart] = useState<Product[]>(() => {
 
     const storagedCart = localStorage.getItem('@RocketShoes:cart');
@@ -38,9 +39,8 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
     try {
 
-      const itemCart = cart.find(product => product.id === productId);
-      const item = await api.get(`/products/${productId}`)
-        .then(response => response.data);
+      const newCart = [...cart];
+      const itemCart = newCart.find(product => product.id === productId);
       const itemStock = await api.get(`/stock/${productId}`)
         .then(response => response.data.amount);
 
@@ -52,12 +52,12 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
       if (itemCart) {
 
-        const newCart = cart.map(product => {
+        itemCart.amount += 1;
+      } else {
 
-          if (product.id === productId) {
-
-            product.amount += 1;
-          }
+        const response = await api.get<Product>(`/products/${productId}`)
+        newCart.push({ ...response.data, amount: 1 });
+      }
 
           return product;
         });
@@ -84,13 +84,14 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const removeProduct = (productId: number) => {
 
     try {
-      
+
       const item = cart.find(product => product.id === productId);
 
-      if(!item) {
-        
+      if (!item) {
+
         throw new Error;
       }
+
       const newCart = cart.filter(product => product.id !== productId);
 
       setCart(newCart);
@@ -112,16 +113,16 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         return;
       }
 
-      const itemStock = await api.get(`/stock/${productId}`)
-        .then(response => response.data.amount);
+      const itemStock = await api.get<Stock>(`/stock/${productId}`);
 
-      if (itemStock && itemStock < amount) {
+      if (itemStock && itemStock.data.amount < amount) {
 
         toast.error('Quantidade solicitada fora de estoque');
         return;
       }
 
-      const newCart = cart.map(product => {
+      const newCart = [...cart];
+      const item = newCart.find(product => product.id === productId);
 
         if (product.id === productId) {
 

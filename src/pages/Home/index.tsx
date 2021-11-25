@@ -26,14 +26,15 @@ const Home = (): JSX.Element => {
   const { addProduct, cart } = useCart();
 
   const cartItemsAmount = cart.reduce((sumAmount, product) => {
+
     return {
       ...sumAmount,
       [product.id]: product.amount
     }
-  }, {} as CartItemsAmount)
+  }, {} as CartItemsAmount);
 
   useEffect(() => {
-    
+
     async function loadProducts() {
 
       api.get('/products').then(response => {
@@ -52,7 +53,7 @@ const Home = (): JSX.Element => {
   }, []);
 
   function handleAddProduct(id: number) {
-    
+
     addProduct(id);
   }
 
